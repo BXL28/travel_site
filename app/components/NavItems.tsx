@@ -1,66 +1,51 @@
-import {Link, NavLink, useLoaderData, useNavigate} from "react-router";
-import {sidebarItems} from "~/constants";
-import {cn} from "~/lib/utils";
-import {logoutUser} from "~/appwrite/auth";
+import { NavLink } from "react-router";
+import { sidebarItems } from "~/constants";
+import { cn } from "~/lib/utils";
 
-const NavItems = ({ handleClick }: { handleClick?: () => void}) => {
-    const user = useLoaderData();
-    const navigate = useNavigate();
-
-    const handleLogout = async () => {
-        await logoutUser();
-        navigate('/sign-in')
-    }
-
-    return (
-        <section className="nav-items w-full h-full flex flex-col bg-[rgba(255,255,255,0.05)] backdrop-blur-md text-[#EAEAEA] p-6">
-            <Link to='/' className="link-logo">
-
-                <h1>BXL Travel</h1>
-            </Link>
-
-            <div className="container">
-                <nav>
-                    {sidebarItems.map(({ id, href, icon, label }) => (
-                        <NavLink to={href} key={id}>
-                            {({ isActive }: { isActive: boolean }) => (
-                                <div className={cn('group nav-item', {
-                                    'bg-primary-100 !text-white': isActive
-                                })} onClick={handleClick}>
-                                    <img
-                                        src={icon}
-                                        alt={label}
-                                        className={`group-hover:brightness-0 size-0 group-hover:invert ${isActive ? 'brightness-0 invert' : 'text-dark-200'}`}
-                                    />
-                                    {label}
-                                </div>
-                            )}
-                        </NavLink>
-                    ))}
-                </nav>
-
-                <footer className="nav-footer">
-                    <img src={user?.imageUrl || '/assets/images/david.webp'} alt={user?.name || 'David'} referrerPolicy="no-referrer" />
-
-                    <article>
-                        <h2>{user?.name}</h2>
-                        <p>{user?.email}</p>
-                    </article>
-
-                    <button
-                        onClick={handleLogout}
-                        className="cursor-pointer"
-                    >
-                        <img
-                            src="/assets/icons/logout.svg"
-                            alt="logout"
-                            className="size-6"
-                        />
-                    </button>
-                </footer>
-            </div>
-        </section>
-    )
+interface NavItemsProps {
+    handleClick?: () => void;
 }
 
-export default NavItems
+const NavItems = ({ handleClick }: NavItemsProps) => {
+    return (
+        <div className="flex h-full flex-col bg-white p-6">
+            <div className="mb-10 flex items-center gap-3">
+                <div className="size-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                    <img src="/assets/icons/logo.svg" className="size-5 invert" alt="logo" />
+                </div>
+                <span className="text-lg font-bold text-slate-900">BXL Travel</span>
+            </div>
+
+            <nav className="flex flex-col gap-2">
+                {sidebarItems.map((item) => (
+                    <NavLink
+                        key={item.id}
+                        to={item.href}
+                        onClick={handleClick}
+                        className={({ isActive }) =>
+                            cn(
+                                "group flex items-center gap-4 rounded-2xl px-4 py-3 text-sm font-bold transition-all",
+                                isActive
+                                    ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
+                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                            )
+                        }
+                    >
+                        {({ isActive }) => (
+                            <>
+                                <img
+                                    src={item.icon}
+                                    alt={item.label}
+                                    className={cn("size-6 transition-all", isActive ? "brightness-0 invert" : "opacity-50")}
+                                />
+                                {item.label}
+                            </>
+                        )}
+                    </NavLink>
+                ))}
+            </nav>
+        </div>
+    );
+};
+
+export default NavItems;

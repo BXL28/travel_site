@@ -1,4 +1,4 @@
-import { Header, TripCard } from "../../../components";
+import { Header, TripCard } from "../../components";
 import { type LoaderFunctionArgs, useSearchParams } from "react-router";
 import { getAllTrips } from "~/appwrite/trips";
 import { parseTripData } from "~/lib/utils";

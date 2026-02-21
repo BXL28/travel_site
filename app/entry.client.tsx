@@ -2,23 +2,26 @@ import * as Sentry from "@sentry/react-router";
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { HydratedRouter } from "react-router/dom";
+import { registerLicense } from '@syncfusion/ej2-base'; // Import this
+
+// 1. Register the license using your Environment Variable
+const syncKey = import.meta.env.VITE_SYNCFUSION_LICENSE_KEY;
+
+if (syncKey) {
+    registerLicense(syncKey);
+} else {
+    console.warn("Syncfusion license key is missing! Check your .env.local file.");
+}
 
 Sentry.init({
     dsn: "https://1d2535740ba31b0a4611fc5545f056c0@o4509839524495360.ingest.us.sentry.io/4509862048694272",
-
-    // Adds request headers and IP for users, for more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
     sendDefaultPii: true,
-
     integrations: [
         Sentry.browserTracingIntegration(),
         Sentry.replayIntegration(),
     ],
-    tracesSampleRate: 1.0, //  Capture 100% of the transactions
-    // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
+    tracesSampleRate: 1.0,
     tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
-    // Capture Replay for 10% of all sessions,
-    // plus 100% of sessions with an error
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
 });

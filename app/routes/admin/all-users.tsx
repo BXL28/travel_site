@@ -1,4 +1,4 @@
-import { Header } from "../../../components";
+import { Header } from "../../components";
 import { ColumnsDirective, ColumnDirective, GridComponent } from "@syncfusion/ej2-react-grids";
 import { cn, formatDate } from "~/lib/utils";
 import { getAllUsers } from "~/appwrite/auth";

@@ -23,9 +23,9 @@ const Header = ({ title, description, ctaText, ctaUrl }: Props) => {
 
             {ctaText && ctaUrl && (
                 <Link to={ctaUrl}>
-                    <ButtonComponent type="button" className="!h-11 !w-full md:w-[240px] flex items-center justify-center gap-2 bg-[#EAEAEA]/10 hover:bg-[#EAEAEA]/20 text-[#EAEAEA] transition-colors duration-200">
-                        <img src="/assets/icons/plus.svg" alt="plus" className="w-5 h-5" />
-                        <span className="font-semibold">{ctaText}</span>
+                    <ButtonComponent type="button" className="button-class !h-11 !w-full md:w-[240px]">
+                        <img src="/assets/icons/plus.svg" alt="plus" className="size-5" />
+                        <span className="p-16-semibold text-white">{ctaText}</span>
                     </ButtonComponent>
                 </Link>
             )}

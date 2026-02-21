@@ -1,14 +1,22 @@
-import { Header } from "../../../components";
-import { ComboBoxComponent } from "@syncfusion/ej2-react-dropdowns";
+import { Header } from "../../components";
+// Use DropDownListComponent for preference fields (opens on click)
+// Use ComboBoxComponent for Destination (best for long lists with filtering)
+import { ComboBoxComponent, DropDownListComponent } from "@syncfusion/ej2-react-dropdowns";
 import type { Route } from './+types/create-trip'
 import { comboBoxItems, selectItems } from "~/constants";
 import { cn, formatKey } from "~/lib/utils";
 import { LayerDirective, LayersDirective, MapsComponent } from "@syncfusion/ej2-react-maps";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { world_map } from "~/constants/world_map";
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
 import { account } from "~/appwrite/client";
 import { useNavigate } from "react-router";
+
+// --- Ensure your app/app.css has these imports ---
+// @import "../node_modules/@syncfusion/ej2-base/styles/tailwind.css";
+// @import "../node_modules/@syncfusion/ej2-react-dropdowns/styles/tailwind.css";
+// @import "../node_modules/@syncfusion/ej2-inputs/styles/tailwind.css";
+// @import "../node_modules/@syncfusion/ej2-popups/styles/tailwind.css";
 
 interface Country {
     name: string;
@@ -47,6 +55,9 @@ export const loader = async () => {
 const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
     const { countries } = (loaderData as { countries: Country[] }) || { countries: [] };
     const navigate = useNavigate();
+
+    // Create a ref to control the destination combo box
+    const countryCombo = useRef<ComboBoxComponent>(null);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -102,7 +113,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
 
     const mapData = [{
         country: formData.country,
-        color: '#3B82F6', // Using a nice primary blue
+        color: '#3B82F6',
         coordinates: countries.find(c => c.value === formData.country)?.coordinates || []
     }];
 
@@ -122,11 +133,15 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                             <div className="flex flex-col gap-4">
                                 <label className="text-sm font-bold uppercase tracking-widest text-slate-500">Destination</label>
                                 <ComboBoxComponent
+                                    ref={countryCombo}
                                     dataSource={countries.map(c => ({ text: c.name, value: c.value }))}
                                     fields={{ text: 'text', value: 'value' }}
                                     placeholder="Choose a country"
                                     change={(e: any) => handleChange('country', e.value)}
                                     allowFiltering={true}
+                                    autofill={true}
+                                    // Fix: Show popup immediately when the user clicks/focuses the field
+                                    focus={() => countryCombo.current?.showPopup()}
                                     cssClass="e-outline custom-select-height"
                                 />
                             </div>
@@ -136,7 +151,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                                 <input
                                     type="number"
                                     placeholder="How long? (e.g. 5)"
-                                    className="w-full h-[40px] px-4 rounded-lg border border-slate-300 bg-white transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-slate-700"
+                                    className="w-full h-[38px] px-4 rounded border border-[#ced4da] bg-white transition-all focus:border-blue-500 outline-none text-slate-700"
                                     min={1}
                                     max={14}
                                     onChange={(e) => handleChange('duration', Number(e.target.value))}
@@ -144,16 +159,17 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                             </div>
                         </div>
 
-                        {/* Section 2: Preferences */}
+                        {/* Section 2: Preferences (Instant Dropdowns) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             {selectItems.map((key) => (
                                 <div key={key} className="flex flex-col gap-4">
                                     <label className="text-sm font-bold uppercase tracking-widest text-slate-500">{formatKey(key)}</label>
-                                    <ComboBoxComponent
-                                        dataSource={comboBoxItems[key as keyof typeof comboBoxItems].map(i => ({ text: i, value: i }))}
-                                        fields={{ text: 'text', value: 'value' }}
+                                    <DropDownListComponent
+                                        dataSource={comboBoxItems[key as keyof typeof comboBoxItems]}
                                         placeholder={`Select ${formatKey(key)}`}
                                         change={(e: any) => handleChange(key as keyof TripFormData, e.value)}
+                                        // Fix: DropDownList opens immediately on click by design
+                                        popupHeight="250px"
                                         cssClass="e-outline custom-select-height"
                                     />
                                 </div>
@@ -181,7 +197,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                         {/* Feedback & Actions */}
                         <div className="space-y-6 pt-4">
                             {error && (
-                                <div className="p-4 rounded-xl bg-red-50 text-red-600 text-sm font-medium text-center border border-red-100 animate-pulse">
+                                <div className="p-4 rounded-xl bg-red-50 text-red-600 text-sm font-medium text-center border border-red-100">
                                     {error}
                                 </div>
                             )}

@@ -1,15 +1,16 @@
 import type { Config } from "@react-router/dev/config";
 import { sentryOnBuildEnd } from "@sentry/react-router";
-import { vercelPreset } from "@vercel/react-router/vite"; // Add this import
+import { vercelPreset } from "@vercel/react-router/vite";
 
 export default {
-    // 1. Add the Vercel Preset here
+    // Explicitly define the app directory to fix the "Could not find root route" error
+    appDirectory: "app",
+
     presets: [vercelPreset()],
 
     ssr: true,
 
     async buildEnd(args) {
-        // 2. Keep your Sentry logic
         await sentryOnBuildEnd(args);
     },
 } satisfies Config;
