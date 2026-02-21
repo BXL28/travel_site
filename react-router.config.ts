@@ -3,14 +3,12 @@ import { sentryOnBuildEnd } from "@sentry/react-router";
 import { vercelPreset } from "@vercel/react-router/vite";
 
 export default {
-    // Explicitly define the app directory to fix the "Could not find root route" error
     appDirectory: "app",
-
     presets: [vercelPreset()],
-
     ssr: true,
 
     async buildEnd(args) {
+        // Now that viteConfig is linked, this only needs 1 argument
         await sentryOnBuildEnd(args);
     },
 } satisfies Config;
