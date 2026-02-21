@@ -23,6 +23,7 @@
     "@syncfusion/ej2-react-maps": "^30.2.4",
     "@syncfusion/ej2-react-navigations": "^30.2.5",
     "@syncfusion/ej2-react-splitbuttons": "^30.2.4",
+    "@vercel/react-router": "^1.2.5",
     "@yusifaliyevpro/countries": "^2.2.2",
     "appwrite": "^18.2.0",
     "clsx": "^2.1.1",

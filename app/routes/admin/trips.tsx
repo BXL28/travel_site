@@ -1,29 +1,28 @@
-import {Header, TripCard} from "../../../components";
-import {type LoaderFunctionArgs, useSearchParams} from "react-router";
-import {getAllTrips, getTripById} from "~/appwrite/trips";
-import {parseTripData} from "~/lib/utils";
-import type {Route} from './+types/trips'
-import {useState} from "react";
-import {PagerComponent} from "@syncfusion/ej2-react-grids";
-import {  useEffect } from "react";
+import { Header, TripCard } from "../../../components";
+import { type LoaderFunctionArgs, useSearchParams } from "react-router";
+import { getAllTrips } from "~/appwrite/trips";
+import { parseTripData } from "~/lib/utils";
+import type { Route } from './+types/trips';
+import { useState } from "react";
+import { PagerComponent } from "@syncfusion/ej2-react-grids";
 
-const images = [
+// --- Types ---
+interface DayPlan {
+    day: number;
+    location: string;
+    activities: { time: string; description: string }[];
+}
 
-    "/background/b5.jpg",
-    "/background/b2.jpg",
-
-    "/background/b3.jpg",
-    "/background/b6.jpg",
-    "/background/b4.jpg",
-    "/background/b1.jpg",
-
-
-
-    "/assets/images/card-img-6.png",
-    "/assets/images/card-img-5.png",
-
-
-];
+interface Trip {
+    id: string;
+    name: string;
+    imageUrls: string[];
+    itinerary: DayPlan[];
+    interests: string;
+    travelStyle: string;
+    estimatedPrice: string;
+    country?: string;
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
     const limit = 8;
@@ -34,7 +33,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const { allTrips, total } = await getAllTrips(limit, offset);
 
     return {
-        trips: allTrips.map(({ $id, tripDetail, imageUrls }) => ({
+        // FIX: Ensure key is 'tripDetail' to match your Appwrite action
+        trips: (allTrips || []).map(({ $id, tripDetail, imageUrls }: any) => ({
             id: $id,
             ...parseTripData(tripDetail),
             imageUrls: imageUrls ?? []
@@ -44,82 +44,74 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 const Trips = ({ loaderData }: Route.ComponentProps) => {
-    const trips = loaderData.trips as Trip[] | [];
+    const { trips, total } = loaderData;
+    const typedTrips = trips as Trip[];
 
     const [searchParams] = useSearchParams();
-    const initialPage = Number(searchParams.get('page') || '1')
+    const initialPage = Number(searchParams.get('page') || '1');
 
     const [currentPage, setCurrentPage] = useState(initialPage);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        window.location.search = `?page=${page}`
+        // Using window.location for a full refresh to handle server-side offset correctly
+        window.location.search = `?page=${page}`;
     }
-    const [currentImage, setCurrentImage] = useState(0);
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentImage((prev) => (prev + 1) % images.length);
-        }, 6000); // change image every 6s
-        return () => clearInterval(interval);
-    }, []);
 
     return (
-        <div className="relative min-h-screen w-full">
-
-            {/* Slideshow background */}
-            {images.map((img, index) => (
-                <div
-                    key={index}
-                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                        index === currentImage ? "opacity-100" : "opacity-0"
-                    }`}
-                    style={{
-                        backgroundImage: `url(${img})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        zIndex: 10,
-                        pointerEvents: "none",
-                    }}
-                />
-            ))}
-
-        <main className="all-users wrapper relative z-10">
+        <main className="dashboard wrapper">
             <Header
-                title="Trips"
-                description="View and edit AI-generated travel plans"
+                title="Explore All Trips"
+                description="Manage and view all AI-generated travel itineraries in one place."
                 ctaText="Create a trip"
-                ctaUrl="/trips/create"
+                ctaUrl="/travel/create" // Updated to match your path naming
             />
 
-            <section>
-                <h1 className="p-24-semibold text-dark-100 mb-4">
-                    Manage Created Trips
-                </h1>
-
-                <div className="trip-grid mb-4">
-                    {trips.map((trip) => (
-                        <TripCard
-                            key={trip.id}
-                            id={trip.id}
-                            name={trip.name}
-                            imageUrl={trip.imageUrls[0]}
-                            location={trip.itinerary?.[0]?.location ?? ""}
-                            tags={[trip.interests, trip.travelStyle]}
-                            price={trip.estimatedPrice}
-                        />
-                    ))}
+            <section className="container mt-10">
+                <div className="flex justify-between items-center mb-8">
+                    <h2 className="text-xl font-semibold text-dark-100">
+                        Manage Created Trips ({total})
+                    </h2>
                 </div>
 
-                <PagerComponent
-                    totalRecordsCount={loaderData.total}
-                    pageSize={8}
-                    currentPage={currentPage}
-                    click={(args) => handlePageChange(args.currentPage)}
-                    cssClass="!mb-4"
-                />
+                {/* Grid following the Dashboard format */}
+                <div className="trip-grid mb-10">
+                    {typedTrips.length > 0 ? (
+                        typedTrips.map((trip) => (
+                            <TripCard
+                                key={trip.id}
+                                id={trip.id}
+                                name={trip.name || 'Untitled Trip'}
+                                imageUrl={trip.imageUrls[0]}
+                                // Logic matches the Dashboard: Day 1 location or Country
+                                location={trip.itinerary?.[0]?.location || trip.country || 'Global'}
+                                tags={[
+                                    typeof trip.interests === 'string' ? trip.interests : trip.interests?.[0],
+                                    trip.travelStyle
+                                ].filter(Boolean)}
+                                price={trip.estimatedPrice || 'Contact'}
+                            />
+                        ))
+                    ) : (
+                        <div className="col-span-full py-20 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                            <p className="text-gray-400 font-medium">No trips found. Start by creating one!</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Pagination following the Dashboard style */}
+                <div className="flex justify-center pb-10">
+                    <PagerComponent
+                        totalRecordsCount={total}
+                        pageSize={8}
+                        currentPage={currentPage}
+                        click={(args) => handlePageChange(args.currentPage)}
+                        cssClass="custom-pager !border-none !shadow-none"
+                    />
+                </div>
             </section>
         </main>
-            </div>
     )
 }
-export default Trips
+
+export default Trips;

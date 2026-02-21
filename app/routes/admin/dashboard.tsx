@@ -1,37 +1,20 @@
-import {Header, StatsCard, TripCard} from "../../../components";
-import {getAllUsers, getUser} from "~/appwrite/auth";
+import { Header, StatsCard, TripCard } from "../../../components";
+import { getAllUsers, getUser } from "~/appwrite/auth";
 import type { Route } from './+types/dashboard';
-import {getTripsByTravelStyle, getUserGrowthPerDay, getUsersAndTripsStats} from "~/appwrite/dashboard";
-import {getAllTrips} from "~/appwrite/trips";
-import {parseTripData} from "~/lib/utils";
+import { getTripsByTravelStyle, getUserGrowthPerDay, getUsersAndTripsStats } from "~/appwrite/dashboard";
+import { getAllTrips } from "~/appwrite/trips";
+import { parseTripData } from "~/lib/utils";
 import {
     Category,
     ChartComponent,
     ColumnSeries,
     DataLabel, SeriesCollectionDirective, SeriesDirective,
     SplineAreaSeries,
-    Tooltip
+    Tooltip,
+    Inject
 } from "@syncfusion/ej2-react-charts";
-import {ColumnDirective, ColumnsDirective, GridComponent, Inject} from "@syncfusion/ej2-react-grids";
-import {tripXAxis, tripyAxis, userXAxis, useryAxis} from "~/constants";
-import {redirect} from "react-router";
-import BackgroundSlideshow from "~/BackgroundSlideshow";
-import { useState, useEffect } from "react";
-
-const images = [
-    "/background/b3.jpg",
-    "/background/b1.jpg",
-    "/assets/images/card-img-6.png",
-    "/background/b4.jpg",
-    "/background/b5.jpg",
-    "/background/b2.jpg",
-    "/background/b6.jpg",
-    "/assets/images/card-img-5.png",
-
-];
-
-
-
+import { ColumnDirective, ColumnsDirective, GridComponent } from "@syncfusion/ej2-react-grids";
+import { tripXAxis, tripyAxis, userXAxis, useryAxis } from "~/constants";
 
 export const clientLoader = async () => {
     const [
@@ -42,21 +25,24 @@ export const clientLoader = async () => {
         tripsByTravelStyle,
         allUsers,
     ] = await Promise.all([
-        await getUser(),
-        await getUsersAndTripsStats(),
-        await getAllTrips(4, 0),
-        await getUserGrowthPerDay(),
-        await getTripsByTravelStyle(),
-        await getAllUsers(4, 0),
+        getUser(),
+        getUsersAndTripsStats(),
+        getAllTrips(4, 0),
+        getUserGrowthPerDay(),
+        getTripsByTravelStyle(),
+        getAllUsers(0,4),
     ])
 
-    const allTrips = trips.allTrips.map(({ $id, tripDetail, imageUrls }) => ({
-        id: $id,
-        ...parseTripData(tripDetail),
-        imageUrls: imageUrls ?? []
-    }))
+    const allTrips = (trips?.allTrips || []).map(({ $id, tripDetail, imageUrls }: any) => {
+        const parsed = parseTripData(tripDetail);
+        return {
+            id: $id,
+            ...parsed,
+            imageUrls: imageUrls ?? []
+        }
+    })
 
-    const mappedUsers: UsersItineraryCount[] = allUsers.users.map((user) => ({
+    const mappedUsers = (allUsers?.users || []).map((user: any) => ({
         imageUrl: user.imageUrl,
         name: user.name,
         count: user.itineraryCount ?? Math.floor(Math.random() * 10),
@@ -72,86 +58,56 @@ export const clientLoader = async () => {
     }
 }
 
-
 const Dashboard = ({ loaderData }: Route.ComponentProps) => {
-    const user = loaderData.user as User | null;
-    const { dashboardStats, allTrips, userGrowth, tripsByTravelStyle, allUsers } = loaderData;
-    const [currentImage, setCurrentImage] = useState(0);
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentImage((prev) => (prev + 1) % images.length);
-        }, 6000); // change image every 6s
-        return () => clearInterval(interval);
-    }, []);
+    const { user, dashboardStats, allTrips, userGrowth, tripsByTravelStyle, allUsers } = loaderData;
 
-    const trips = allTrips.map((trip) => ({
-        imageUrl: trip.imageUrls[0],
-        name: trip.name,
-        interest: trip.interests,
+    const tripsForGrid = allTrips.map((trip: any) => ({
+        imageUrl: trip.imageUrls[0] || '/assets/images/placeholder.png',
+        name: trip.name || 'Untitled Trip',
+        interest: typeof trip.interests === 'string' ? trip.interests : trip.interests?.[0] || 'General',
     }))
 
     const usersAndTrips = [
         {
-            title: 'Latest user signups',
+            title: 'Latest User Signups',
             dataSource: allUsers,
             field: 'count',
             headerText: 'Trips created'
         },
         {
-            title: 'Trips based on interests',
-            dataSource: trips,
+            title: 'Trips by Interest',
+            dataSource: tripsForGrid,
             field: 'interest',
             headerText: 'Interests'
         }
     ]
 
     return (
-
-        <div className="relative min-h-screen w-full">
-
-            {/* Slideshow background */}
-            {images.map((img, index) => (
-                <div
-                    key={index}
-                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                        index === currentImage ? "opacity-100" : "opacity-0"
-                    }`}
-                    style={{
-                        backgroundImage: `url(${img})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        zIndex: 10,
-                        pointerEvents: "none",
-                    }}
-                />
-            ))}
-
-            {/* Optional dark overlay */}
-
-
-
-        <main className="dashboard wrapper relative z-10">
+        <main className="dashboard pt-32 pb-20 bg-[#FAFBFC]">
+            <div className="max-w-7xl mx-auto px-6 lg:px-10">
+                {/* Header Section aligned with TripDetail Typography */}
                 <Header
-                    title={`Welcome ${user?.name ?? 'Guest'} 👋`}
-                    description="Track activity, trends and popular destinations in real time"
+                    title={`Welcome back, ${user?.name ?? 'Guest'} 👋`}
+                    description="Monitor your travel ecosystem, track growth, and explore the latest AI-generated itineraries."
                 />
 
-                <section className="flex flex-col gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                {/* Stats Cards Section */}
+                <section className="mt-12">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <StatsCard
-                            headerTitle="Total Users"
+                            headerTitle="Total Explorers"
                             total={dashboardStats.totalUsers}
                             currentMonthCount={dashboardStats.usersJoined.currentMonth}
                             lastMonthCount={dashboardStats.usersJoined.lastMonth}
                         />
                         <StatsCard
-                            headerTitle="Total Trips"
+                            headerTitle="Generated Trips"
                             total={dashboardStats.totalTrips}
                             currentMonthCount={dashboardStats.tripsCreated.currentMonth}
                             lastMonthCount={dashboardStats.tripsCreated.lastMonth}
                         />
                         <StatsCard
-                            headerTitle="Active Users"
+                            headerTitle="Active Sessions"
                             total={dashboardStats.userRole.total}
                             currentMonthCount={dashboardStats.userRole.currentMonth}
                             lastMonthCount={dashboardStats.userRole.lastMonth}
@@ -159,100 +115,114 @@ const Dashboard = ({ loaderData }: Route.ComponentProps) => {
                     </div>
                 </section>
 
-                <section className="container">
-                    <h1 className="text-xl font-semibold text-dark-100">Created Trips</h1>
-                    <div className='trip-grid'>
-                        {allTrips.map((trip) => (
+                {/* Created Trips Section - Matching the Gallery/Grid style */}
+                <section className="mt-20">
+                    <div className="flex justify-between items-end mb-8">
+                        <div>
+                            <h2 className="text-3xl font-bold text-slate-900">Recently Created</h2>
+                            <p className="text-slate-500 mt-1">The latest travel plans generated by users.</p>
+                        </div>
+                    </div>
+
+                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+                        {allTrips.map((trip: any) => (
                             <TripCard
                                 key={trip.id}
-                                id={trip.id.toString()}
-                                name={trip.name!}
+                                id={trip.id}
+                                name={trip.name || 'AI Trip'}
                                 imageUrl={trip.imageUrls[0]}
-                                location={trip.itinerary?.[0]?.location ?? ''}
-                                tags={[trip.interests!, trip.travelStyle!]}
-                                price={trip.estimatedPrice!}
+                                location={trip.itinerary?.[0]?.location || trip.country || 'Global'}
+                                tags={[
+                                    typeof trip.interests === 'string' ? trip.interests : trip.interests?.[0],
+                                    trip.travelStyle
+                                ].filter(Boolean)}
+                                price={trip.estimatedPrice || 'Contact'}
                             />
                         ))}
                     </div>
                 </section>
 
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div className="bg-white rounded-2xl shadow p-4">
-                    <ChartComponent
-                        id="chart-1"
-                        primaryXAxis={userXAxis}
-                        primaryYAxis={useryAxis}
-                        title="User Growth"
-                        tooltip={{ enable: true }}
-                    >
-                        <Inject services={[ColumnSeries, SplineAreaSeries, Category, DataLabel, Tooltip]} />
-                        <SeriesCollectionDirective>
-                            <SeriesDirective
-                                dataSource={userGrowth}
-                                xName="day"
-                                yName="count"
-                                type="Column"
-                                name="Column"
-                                columnWidth={0.3}
-                                cornerRadius={{ topLeft: 10, topRight: 10 }}
-                            />
-                            <SeriesDirective
-                                dataSource={userGrowth}
-                                xName="day"
-                                yName="count"
-                                type="SplineArea"
-                                name="Wave"
-                                fill="rgba(71, 132, 238, 0.3)"
-                                border={{ width: 2, color: '#4784EE' }}
-                            />
-                        </SeriesCollectionDirective>
-                    </ChartComponent>
-                </div>
+                {/* Analytics Section - Refined Chart Containers */}
+                <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-20">
+                    <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+                        <h3 className="text-xl font-bold text-slate-900 mb-6 px-2">Growth Analytics</h3>
+                        <ChartComponent
+                            id="chart-1"
+                            primaryXAxis={userXAxis}
+                            primaryYAxis={useryAxis}
+                            chartArea={{ border: { width: 0 } }}
+                            tooltip={{ enable: true }}
+                            background="transparent"
+                        >
+                            <Inject services={[ColumnSeries, SplineAreaSeries, Category, DataLabel, Tooltip]} />
+                            <SeriesCollectionDirective>
+                                <SeriesDirective
+                                    dataSource={userGrowth}
+                                    xName="day"
+                                    yName="count"
+                                    type="Column"
+                                    columnWidth={0.3}
+                                    fill="#3B82F6"
+                                    cornerRadius={{ topLeft: 6, topRight: 6 }}
+                                />
+                                <SeriesDirective
+                                    dataSource={userGrowth}
+                                    xName="day"
+                                    yName="count"
+                                    type="SplineArea"
+                                    fill="rgba(59, 130, 246, 0.1)"
+                                    border={{ width: 2, color: '#3B82F6' }}
+                                />
+                            </SeriesCollectionDirective>
+                        </ChartComponent>
+                    </div>
 
-                <div className="bg-white rounded-2xl shadow p-4">
-                    <ChartComponent
-                        id="chart-2"
-                        primaryXAxis={tripXAxis}
-                        primaryYAxis={tripyAxis}
-                        title="Trip Trends"
-                        tooltip={{ enable: true }}
-                    >
-                        <Inject services={[ColumnSeries, SplineAreaSeries, Category, DataLabel, Tooltip]} />
-                        <SeriesCollectionDirective>
-                            <SeriesDirective
-                                dataSource={tripsByTravelStyle}
-                                xName="travelStyle"
-                                yName="count"
-                                type="Column"
-                                name="day"
-                                columnWidth={0.3}
-                                cornerRadius={{ topLeft: 10, topRight: 10 }}
-                            />
-                        </SeriesCollectionDirective>
-                    </ChartComponent>
-                </div>
-            </section>
+                    <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+                        <h3 className="text-xl font-bold text-slate-900 mb-6 px-2">Travel Style Trends</h3>
+                        <ChartComponent
+                            id="chart-2"
+                            primaryXAxis={tripXAxis}
+                            primaryYAxis={tripyAxis}
+                            chartArea={{ border: { width: 0 } }}
+                            tooltip={{ enable: true }}
+                            background="transparent"
+                        >
+                            <Inject services={[ColumnSeries, Category, DataLabel, Tooltip]} />
+                            <SeriesCollectionDirective>
+                                <SeriesDirective
+                                    dataSource={tripsByTravelStyle}
+                                    xName="travelStyle"
+                                    yName="count"
+                                    type="Column"
+                                    fill="#8B5CF6"
+                                    columnWidth={0.4}
+                                    cornerRadius={{ topLeft: 6, topRight: 6 }}
+                                />
+                            </SeriesCollectionDirective>
+                        </ChartComponent>
+                    </div>
+                </section>
 
-                <section className="user-trip wrapper">
+                {/* Table/Grid Section - Softened Grid Style */}
+                <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
                     {usersAndTrips.map(({ title, dataSource, field, headerText }, i) => (
-                        <div key={i} className="flex flex-col gap-5">
-                            <h3 className="p-20-semibold text-dark-100">{title}</h3>
-                            <GridComponent dataSource={dataSource} gridLines="None">
+                        <div key={i} className="flex flex-col gap-6 bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+                            <h3 className="text-xl font-bold text-slate-900">{title}</h3>
+                            <GridComponent
+                                dataSource={dataSource}
+                                gridLines="None"
+                                rowHeight={60}
+                            >
                                 <ColumnsDirective>
                                     <ColumnDirective
                                         field="name"
                                         headerText="Name"
                                         width="200"
                                         textAlign="Left"
-                                        template={(props: UserData) => (
-                                            <div className="flex items-center gap-1.5 px-4">
-                                                <img
-                                                    src={props.imageUrl}
-                                                    alt="user"
-                                                    className="rounded-full size-8 aspect-square"
-                                                    referrerPolicy="no-referrer"
-                                                />
-                                                <span>{props.name}</span>
+                                        template={(props: any) => (
+                                            <div className="flex items-center gap-3">
+                                                <img src={props.imageUrl} alt="img" className="rounded-full size-10 object-cover shadow-sm" />
+                                                <span className="text-slate-900 font-semibold">{props.name}</span>
                                             </div>
                                         )}
                                     />
@@ -261,15 +231,18 @@ const Dashboard = ({ loaderData }: Route.ComponentProps) => {
                                         headerText={headerText}
                                         width="150"
                                         textAlign="Left"
+                                        template={(props: any) => (
+                                            <span className="text-slate-500 font-medium">{props[field]}</span>
+                                        )}
                                     />
                                 </ColumnsDirective>
                             </GridComponent>
                         </div>
                     ))}
                 </section>
-            </main>
-        </div>
-    );
-};
+            </div>
+        </main>
+    )
+}
 
 export default Dashboard;

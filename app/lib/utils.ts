@@ -10,41 +10,55 @@ export const formatDate = (dateString: string): string => {
     return dayjs(dateString).format("MMMM DD, YYYY");
 };
 
-export function parseMarkdownToJson(markdownText: string): unknown | null {
-    const regex = /```json\n([\s\S]+?)\n```/;
-    const match = markdownText.match(regex);
+/**
+ * AI-Proof JSON Parsing
+ * Handles raw JSON, Markdown-wrapped JSON, and JSON with leading/trailing text.
+ */
+export function parseTripData(input: string | any): any | null {
+    if (!input) return null;
 
-    if (match && match[1]) {
-        try {
-            return JSON.parse(match[1]);
-        } catch (error) {
-            console.error("Error parsing JSON:", error);
-            return null;
+    // If it's already an object (e.g. Appwrite already parsed it), return it
+    if (typeof input === 'object') return input;
+
+    try {
+        // 1. Try direct parse (fastest)
+        return JSON.parse(input);
+    } catch (e) {
+        // 2. Try to find JSON inside backticks or general text
+        // This regex looks for anything between the first { and the last }
+        const start = input.indexOf('{');
+        const end = input.lastIndexOf('}') + 1;
+
+        if (start !== -1 && end !== -1) {
+            const potentialJson = input.substring(start, end);
+            try {
+                return JSON.parse(potentialJson);
+            } catch (innerError) {
+                console.error("AI returned malformed JSON structure:", innerError);
+                return null;
+            }
         }
     }
-    console.error("No valid JSON found in markdown text.");
+
+    console.error("No valid JSON structure found in AI response.");
     return null;
 }
 
-export function parseTripData(jsonString: string): Trip | null {
-    try {
-        const data: Trip = JSON.parse(jsonString);
-
-        return data;
-    } catch (error) {
-        console.error("Failed to parse trip data:", error);
-        return null;
-    }
+// Keep this for backward compatibility if needed, but use parseTripData for everything now
+export function parseMarkdownToJson(markdownText: string): any | null {
+    return parseTripData(markdownText);
 }
 
 export function getFirstWord(input: string = ""): string {
-    return input.trim().split(/\s+/)[0] || "";
+    // If input is an array (AI sometimes sends interests as an array), handle it
+    if (Array.isArray(input)) return input[0] || "";
+    return String(input).trim().split(/\s+/)[0] || "";
 }
 
 export const calculateTrendPercentage = (
     countOfThisMonth: number,
     countOfLastMonth: number
-): TrendResult => {
+): { trend: string; percentage: number } => {
     if (countOfLastMonth === 0) {
         return countOfThisMonth === 0
             ? { trend: "no change", percentage: 0 }
@@ -54,16 +68,12 @@ export const calculateTrendPercentage = (
     const change = countOfThisMonth - countOfLastMonth;
     const percentage = Math.abs((change / countOfLastMonth) * 100);
 
-    if (change > 0) {
-        return { trend: "increment", percentage };
-    } else if (change < 0) {
-        return { trend: "decrement", percentage };
-    } else {
-        return { trend: "no change", percentage: 0 };
-    }
+    if (change > 0) return { trend: "increment", percentage };
+    if (change < 0) return { trend: "decrement", percentage };
+    return { trend: "no change", percentage: 0 };
 };
 
-export const formatKey = (key: keyof TripFormData) => {
+export const formatKey = (key: string) => {
     return key
         .replace(/([A-Z])/g, " $1")
         .replace(/^./, (str) => str.toUpperCase());

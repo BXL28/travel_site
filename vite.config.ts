@@ -12,20 +12,22 @@ const sentryConfig: SentryReactRouterBuildOptions = {
     // ...
 };
 
-export default defineConfig(config => {
-    return {
-        plugins: [
-            tailwindcss(),
-            tsconfigPaths(),
-            reactRouter(),
-            sentryReactRouter(sentryConfig, config)
-        ],
-        sentryConfig,
-        ssr: {
-            noExternal: [/@syncfusion/]
+export default defineConfig({
+    plugins: [reactRouter(), tsconfigPaths()],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    // Put all Syncfusion packages into one 'vendor' chunk
+                    'syncfusion': [
+                        '@syncfusion/ej2-react-grids',
+                        '@syncfusion/ej2-react-buttons',
+                        '@syncfusion/ej2-react-navigations',
+                        '@syncfusion/ej2-react-charts',
+                        '@syncfusion/ej2-react-dropdowns'
+                    ],
+                },
+            },
         },
-        server: {
-            open: "/dashboard",
-        }
-    };
+    },
 });

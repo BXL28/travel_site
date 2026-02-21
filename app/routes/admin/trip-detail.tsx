@@ -1,225 +1,240 @@
-import type {LoaderFunctionArgs} from "react-router";
-import {getAllTrips, getTripById} from "~/appwrite/trips";
+import { Link, type LoaderFunctionArgs } from "react-router";
+import { getAllTrips, getTripById } from "~/appwrite/trips";
 import type { Route } from './+types/trip-detail';
-import {cn, getFirstWord, parseTripData} from "~/lib/utils";
-import {Header, InfoPill, TripCard} from "../../../components";
-import {ChipDirective, ChipListComponent, ChipsDirective} from "@syncfusion/ej2-react-buttons";
-import { useState, useEffect } from "react";
+import { cn, parseTripData } from "~/lib/utils";
+import { Header, InfoPill, TripCard } from "../../../components";
+import { ChipDirective, ChipListComponent, ChipsDirective } from "@syncfusion/ej2-react-buttons";
 
-const images = [
-    "/background/b2.jpg",
-    "/background/b1.jpg",
-
-    "/assets/images/card-img-5.png",
-
-    "/background/b6.jpg",
-    "/background/b3.jpg",
-
-    "/background/b4.jpg",
-    "/assets/images/card-img-6.png",
-    "/background/b5.jpg",
-
-
-
-];
-export const loader = async ({ params }: LoaderFunctionArgs) => {
-    const { tripId } = params;
-    if(!tripId) throw new Error ('Trip ID is required');
-
-    const [trip, trips] = await Promise.all([
-        getTripById(tripId),
-        getAllTrips(4, 0)
-    ]);
-
-    return {
-        trip,
-        allTrips: trips.allTrips.map(({ $id, tripDetail, imageUrls }) => ({
-            id: $id,
-            ...parseTripData(tripDetail),
-            imageUrls: imageUrls ?? []
-        }))
-    }
+// --- Interfaces ---
+interface DayPlan {
+    day: number;
+    location: string;
+    activities: { time: string; description: string }[];
 }
 
-const TripDetail = ({ loaderData }: Route.ComponentProps) => {
-    const imageUrls = loaderData?.trip?.imageUrls || [];
-    const tripData = parseTripData(loaderData?.trip?.tripDetail);
-    // State for slideshow
-    const [currentImage, setCurrentImage] = useState(0);
+interface TripData {
+    name: string;
+    description: string;
+    estimatedPrice: string;
+    duration: number;
+    budget: string;
+    travelStyle: string;
+    country: string;
+    interests: string | string[];
+    groupType: string;
+    bestTimeToVisit: string[];
+    weatherInfo: string[];
+    location: {
+        city: string;
+        coordinates: [number, number];
+        openStreetMap: string;
+    };
+    itinerary: DayPlan[];
+}
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentImage((prev) => (prev + 1) % images.length);
-        }, 6000); // change image every 6 seconds
-        return () => clearInterval(interval);
-    }, []);
+// --- Loader ---
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+    const { tripId } = params;
+
+    // Guard: Prevent this loader from running if we are actually trying to create a trip
+    if (tripId === "create") return null;
+
+    try {
+        const trip = await getTripById(tripId as string);
+        if (!trip) {
+            throw new Response("Trip Not Found", { status: 404 });
+        }
+
+        // Fetch other trips for the "Explore More" section
+        const { allTrips } = await getAllTrips(4, 0);
+
+        return {
+            trip,
+            relatedTrips: (allTrips || []).map((doc: any) => ({
+                id: doc.$id,
+                ...parseTripData(doc.tripDetail),
+                imageUrls: doc.imageUrls ?? []
+            }))
+        };
+    } catch (error) {
+        console.error("Loader Error:", error);
+        throw new Response("Error loading trip data", { status: 500 });
+    }
+};
+
+// --- Component ---
+const TripDetail = ({ loaderData }: Route.ComponentProps) => {
+    // If we are on /trips/create, loaderData will be null due to our guard
+    if (!loaderData || !loaderData.trip) {
+        return null;
+    }
+
+    const { trip, relatedTrips } = loaderData;
+    const tripData: TripData = parseTripData(trip?.tripDetail);
+    const imageUrls = trip?.imageUrls || [];
 
     const {
         name, duration, itinerary, travelStyle,
         groupType, budget, interests, estimatedPrice,
-        description, bestTimeToVisit, weatherInfo, country
+        description, bestTimeToVisit, weatherInfo, country, location
     } = tripData || {};
-    const allTrips = loaderData.allTrips as Trip[] | [];
 
     const pillItems = [
         { text: travelStyle, bg: '!bg-pink-50 !text-pink-500' },
         { text: groupType, bg: '!bg-primary-50 !text-primary-500' },
         { text: budget, bg: '!bg-success-50 !text-success-700' },
-        { text: interests, bg: '!bg-navy-50 !text-navy-500' },
-    ]
+        { text: typeof interests === 'string' ? interests : interests?.[0], bg: '!bg-navy-50 !text-navy-500' },
+    ].filter(p => p.text);
 
-    const visitTimeAndWeatherInfo = [
-        { title: 'Best Time to Visit:', items: bestTimeToVisit},
-        { title: 'Weather:', items: weatherInfo}
-    ]
+    const getBookingLink = (city: string, country: string) => {
+        const query = encodeURIComponent(`${city} ${country} tours tickets`);
+        return `https://www.viator.com/search/${query}?mcid=56757`;
+        // Alternatively, use GetYourGuide:
+        // return `https://www.getyourguide.com/s/?q=${query}`;
+    };
 
     return (
-        <div className="relative min-h-screen w-full">
+        <main className="trip-detail pt-40 wrapper">
+            <div className="max-w-5xl mx-auto">
+                <Link to="/dashboard" className="flex items-center gap-2 mb-8 text-gray-500 hover:text-black transition-all">
+                    <img src="/assets/icons/arrow-left.svg" alt="back" className="w-5 h-5" />
+                    <span className="font-medium">Back to Dashboard</span>
+                </Link>
 
-
-
-        <main className="travel-detail wrapper">
-            <Header title="Trip Details" description="View and edit AI-generated travel plans" />
-
-            <section className="container wrapper-md">
-                <header>
-                    <h1 className="p-40-semibold text-dark-100">{name}</h1>
-                    <div className="flex items-center gap-5">
-                        <InfoPill
-                            text={`${duration} day plan`}
-                            image="/assets/icons/calendar.svg"
-                        />
-
-                        <InfoPill
-                            text={itinerary?.slice(0,4)
-                                .map((item) => item.location).join(', ') || ''}
-                            image="/assets/icons/location-mark.svg"
-                        />
-                    </div>
-                </header>
-
-                <section className="gallery">
-                    {imageUrls.map((url: string, i: number) => (
-                        <img
-                            src={url}
-                            key={i}
-                            className={cn('w-full rounded-xl object-cover', i === 0
-                                ? 'md:col-span-2 md:row-span-2 h-[330px]'
-                                : 'md:row-span-1 h-[150px]')}
-                        />
-                    ))}
-                </section>
-
-                <section className="flex gap-3 md:gap-5 items-center flex-wrap">
-                    <ChipListComponent id="travel-chip">
-                        <ChipsDirective>
-                            {pillItems.map((pill, i) => (
-                                <ChipDirective
-                                    key={i}
-                                    text={getFirstWord(pill.text)}
-                                    cssClass={`${pill.bg} !text-base !font-medium !px-4`}
-                                />
-                            ))}
-                        </ChipsDirective>
-                    </ChipListComponent>
-
-                    <ul className="flex gap-1 items-center">
-                        {Array(5).fill('null').map((_, index) => (
-                            <li key={index}>
-                                <img
-                                    src="/assets/icons/star.svg"
-                                    alt="star"
-                                    className="size-[18px]"
-                                />
-                            </li>
-                        ))}
-
-                        <li className="ml-1">
-                            <ChipListComponent>
-                                <ChipsDirective>
-                                    <ChipDirective
-                                        text="4.9/5"
-                                        cssClass="!bg-yellow-50 !text-yellow-700"
-                                    />
-                                </ChipsDirective>
-                            </ChipListComponent>
-                        </li>
-                    </ul>
-                </section>
-
-                <section className="title">
-                    <article>
-                        <h3>
-                            {duration}-Day {country} {travelStyle} Trip
-                        </h3>
-                        <p>{budget}, {groupType} and {interests}</p>
-                    </article>
-
-                    <h2>{estimatedPrice}</h2>
-                </section>
-
-                <p className="text-sm md:text-lg font-normal text-dark-400">{description}</p>
-
-                <ul className="itinerary">
-                    {itinerary?.map((dayPlan: DayPlan, index: number) => (
-                        <li key={index}>
-                            <h3>
-                                Day {dayPlan.day}: {dayPlan.location}
-                            </h3>
-
-                            <ul>
-                                {dayPlan.activities.map((activity, index: number) => (
-                                    <li key={index}>
-                                        <span className="flex-shring-0 p-18-semibold">{activity.time}</span>
-                                        <p className="flex-grow">{activity.description}</p>
-                                    </li>
-                                ))}
-                            </ul>
-                        </li>
-                    ))}
-                </ul>
-
-                {visitTimeAndWeatherInfo.map((section) => (
-                    <section key={section.title} className="visit">
-                        <div>
-                            <h3>{section.title}</h3>
-
-                            <ul>
-                                {section.items?.map((item) => (
-                                    <li key={item}>
-                                        <p className="flex-grow">{item}</p>
-                                    </li>
-                                ))}
-                            </ul>
+                <section className="container">
+                    <header className="mb-10">
+                        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">{name}</h1>
+                        <div className="flex flex-wrap items-center gap-4 mt-6">
+                            <InfoPill text={`${duration} Days in ${country}`} image="/assets/icons/calendar.svg" />
+                            {location?.city && (
+                                <InfoPill text={location.city} image="/assets/icons/location-mark.svg" />
+                            )}
                         </div>
-                    </section>
-                ))}
+                    </header>
 
-            </section>
+                    {/* Image Gallery */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-12">
+                        {imageUrls.map((url: string, i: number) => (
+                            <img
+                                key={i}
+                                src={url}
+                                alt={name}
+                                className={cn(
+                                    "rounded-2xl object-cover w-full shadow-sm",
+                                    i === 0 ? "md:col-span-2 md:row-span-2 h-[400px]" : "h-[195px]"
+                                )}
+                            />
+                        ))}
+                    </div>
 
-            <div className="bg-blue-400 rounded-2xl shadow p-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                        {/* Main Content */}
+                        <div className="lg:col-span-2">
+                            <section className="mb-10">
+                                <h2 className="text-2xl font-bold mb-4">Overview</h2>
+                                <p className="text-gray-600 text-lg leading-relaxed">{description}</p>
+                            </section>
 
-            <section className="flex flex-col gap-6">
+                            <section className="mb-10">
+                                <h2 className="text-2xl font-bold mb-6">Daily Itinerary</h2>
+                                <div className="space-y-10">
+                                    {itinerary?.map((dayPlan) => (
+                                        <div key={dayPlan.day} className="relative pl-8 border-l-2 border-blue-100">
+                                            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white" />
+                                            <h3 className="text-xl font-semibold mb-4 text-blue-900">
+                                                Day {dayPlan.day}: {dayPlan.location}
+                                            </h3>
+                                            <div className="bg-slate-50 rounded-xl p-5 space-y-4">
+                                                {dayPlan.activities.map((act, idx) => (
+                                                    <div key={idx} className="flex gap-4">
+                                                        <span className="text-sm font-bold text-blue-600 uppercase w-20 pt-1">{act.time}</span>
+                                                        <p className="flex-1 text-gray-700">{act.description}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        </div>
 
-                <h2 className="p-24-semibold text-dark-100">Popular Trips</h2>
+                        {/* Sidebar Info */}
+                        <aside className="space-y-8">
+                            <div className="bg-white border border-gray-100 p-6 rounded-3xl shadow-sm">
+                                <p className="text-gray-400 text-sm font-medium uppercase tracking-wider">Starting from</p>
+                                <h2 className="text-4xl font-bold text-blue-600 mb-6">{estimatedPrice}</h2>
 
-                <div className="trip-grid">
-                    {allTrips.map((trip) => (
-                        <TripCard
-                            key={trip.id}
-                            id={trip.id}
-                            name={trip.name}
-                            imageUrl={trip.imageUrls[0]}
-                            location={trip.itinerary?.[0]?.location ?? ""}
-                            tags={[trip.interests, trip.travelStyle]}
-                            price={trip.estimatedPrice}
-                        />
-                    ))}
-                </div>
-            </section>
+                                <ChipListComponent id="trip-tags">
+                                    <ChipsDirective>
+                                        {pillItems.map((pill, i) => (
+                                            <ChipDirective key={i} text={pill.text} cssClass={`${pill.bg} !rounded-lg`} />
+                                        ))}
+                                    </ChipsDirective>
+                                </ChipListComponent>
+
+
+                            </div>
+
+                            <div className="bg-white border border-gray-100 p-6 rounded-3xl shadow-sm">
+                                <p className="text-gray-400 text-sm font-medium uppercase tracking-wider">Starting from</p>
+                                <h2 className="text-4xl font-bold text-blue-600 mb-6">{estimatedPrice}</h2>
+
+                                {/* 🟢 NEW BOOKING BUTTON */}
+                                <a
+                                    href={getBookingLink(location?.city || "", country)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all mb-6 shadow-lg shadow-blue-100"
+                                >
+                                    Book Tickets & Tours
+                                </a>
+
+                                <ChipListComponent id="trip-tags">
+                                    {/* ... your existing chips code ... */}
+                                </ChipListComponent>
+                            </div>
+
+                            <div className="bg-slate-900 text-white p-6 rounded-3xl">
+                                <h3 className="text-lg font-bold mb-4">Travel Tips</h3>
+                                <div className="space-y-6">
+                                    <div>
+                                        <h4 className="text-blue-400 text-sm font-bold mb-2">Best Time to Visit</h4>
+                                        <ul className="text-sm space-y-2 opacity-90">
+                                            {bestTimeToVisit?.map((t, i) => <li key={i}>{t}</li>)}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-blue-400 text-sm font-bold mb-2">Weather</h4>
+                                        <ul className="text-sm space-y-2 opacity-90">
+                                            {weatherInfo?.map((w, i) => <li key={i}>{w}</li>)}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </section>
+
+                {/* Popular Trips Section */}
+                <section className="mt-24 border-t pt-16">
+                    <Header title="Explore More" description="Similar trips you might enjoy" />
+                    <div className="trip-grid">
+                        {relatedTrips.map((trip) => (
+                            <TripCard
+                                key={trip.id}
+                                id={trip.id}
+                                name={trip.name}
+                                imageUrl={trip.imageUrls[0]}
+                                location={trip.itinerary?.[0]?.location ?? ""}
+                                tags={[trip.interests, trip.travelStyle]}
+                                price={trip.estimatedPrice}
+                            />
+                        ))}
+                    </div>
+                </section>
             </div>
         </main>
-            </div>
-    )
-}
-export default TripDetail
+    );
+};
+
+export default TripDetail;

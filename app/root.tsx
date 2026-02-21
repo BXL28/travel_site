@@ -51,14 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-    return (
-
-
-
-            <main className="relative z-10">
-                <Outlet />
-            </main>
-    );
+    return <Outlet />;
 }
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
