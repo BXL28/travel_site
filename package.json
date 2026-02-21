@@ -14,7 +14,7 @@
     "@react-router/serve": "^7.7.1",
     "@sentry/profiling-node": "^10.5.0",
     "@sentry/react": "^10.5.0",
-    "@sentry/react-router": "^10.5.0",
+    "@sentry/react-router": "^10.39.0",
     "@syncfusion/ej2-base": "^30.2.4",
     "@syncfusion/ej2-react-buttons": "^30.2.4",
     "@syncfusion/ej2-react-charts": "^30.2.5",

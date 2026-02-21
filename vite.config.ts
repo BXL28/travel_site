@@ -2,12 +2,12 @@ import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { sentryReactRouter } from "@sentry/react-router";
+// Replace the previous Sentry import with this:
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 export default defineConfig({
     plugins: [
-        // Sentry must be at the top
-        sentryReactRouter({
+        sentryVitePlugin({
             org: "js-mastery-90g",
             project: "jsm-travel-agency",
             authToken: process.env.SENTRY_AUTH_TOKEN,
@@ -17,7 +17,6 @@ export default defineConfig({
         tailwindcss(),
     ],
     optimizeDeps: {
-        // Prevents "Named export not found" by pre-bundling CJS modules
         include: [
             '@syncfusion/ej2-base',
             '@syncfusion/ej2-react-buttons',
@@ -29,6 +28,6 @@ export default defineConfig({
         noExternal: [/@syncfusion/, 'appwrite'],
     },
     build: {
-        sourcemap: true, // Required for Sentry
+        sourcemap: true,
     }
 });
