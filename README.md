@@ -66,7 +66,8 @@ Enter your destination and travel details to trigger the AI engine.
 ### 3. Review Your Plan
 Get a full, day-by-day breakdown of activities and local secrets.
 <img width="700" alt="Result" src="https://github.com/user-attachments/assets/da0c031e-19c0-4909-b04f-104244a76780" />
-<img width="700" alt="Itinerary" src="https://github.com/user-attachments/assets/4db8cc2a-a2d8-4114-98ca-521f5c01a877" />
+<img width="1015" height="811" alt="image" src="https://github.com/user-attachments/assets/0d593715-85d6-4b90-b0f0-cb1a225d266d" />
+
 
 <br/>
 
