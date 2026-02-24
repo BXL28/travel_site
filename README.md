@@ -71,8 +71,16 @@ Get a full, day-by-day breakdown of activities and local secrets.
 <br/>
 
 ### 4. Explore & Book
-Use the integrated **Viator** links to book your experiences directly.
+View your trip on the dashboard or use the integrated **Viator** links to book your experiences directly.
 <img width="800" alt="Viator Integration" src="https://github.com/user-attachments/assets/15870a89-bfb7-499c-8de3-e400bb6f2e98" />
+
+### 5. Book
+Use the integrated **Viator** links to book your experiences directly.
+<img width="407" height="273" alt="image" src="https://github.com/user-attachments/assets/aec664f4-738a-406d-b414-92e6d8af8603" />
+<img width="1850" height="711" alt="image" src="https://github.com/user-attachments/assets/badc99fc-741c-43d1-9575-5bb0a4cd5045" />
+
+
+
 
 ---
 
