@@ -6,7 +6,7 @@
 **An AI-powered travel planner that leverages Google Gemini to curate personalized vacation itineraries in seconds.**
 
 <div align="center">
-  <a href="[https://youtube-mp-3-6q5eownp1-bxl28s-projects.vercel.app](https://www.bxltravel.com/)" target="_blank">
+  <a href="https://www.bxltravel.com/" target="_blank">
     <b>View Live Project</b>
   </a>
 </div>
