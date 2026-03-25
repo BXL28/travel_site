@@ -1,4 +1,4 @@
-import { Client, Account, Databases, Storage } from 'appwrite';
+import { Client, Databases } from 'appwrite';
 
 // Helper to ensure variables are grabbed regardless of environment
 const getEnv = (key: string) => {
@@ -22,6 +22,4 @@ const client = new Client()
     .setEndpoint(appwriteConfig.endpointUrl)
     .setProject(appwriteConfig.projectId);
 
-export const account = new Account(client);
 export const database = new Databases(client);
-export const storage = new Storage(client);

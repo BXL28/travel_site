@@ -1,248 +1,192 @@
-import { Header, StatsCard, TripCard } from "../../components";
-import { getAllUsers, getUser } from "~/appwrite/auth";
-import type { Route } from './+types/dashboard';
-import { getTripsByTravelStyle, getUserGrowthPerDay, getUsersAndTripsStats } from "~/appwrite/dashboard";
-import { getAllTrips } from "~/appwrite/trips";
+import * as React from "react";
+import { Link } from "react-router";
+import { BrandMark, CreateTripLink, TripCard } from "../../components";
+import type { Route } from "./+types/dashboard";
+import { getTripsUpTo } from "~/appwrite/trips";
 import { parseTripData } from "~/lib/utils";
-import {
-    Category,
-    ChartComponent,
-    ColumnSeries,
-    DataLabel, SeriesCollectionDirective, SeriesDirective,
-    SplineAreaSeries,
-    Tooltip,
-    Inject
-} from "@syncfusion/ej2-react-charts";
-import { ColumnDirective, ColumnsDirective, GridComponent } from "@syncfusion/ej2-react-grids";
-import { tripXAxis, tripyAxis, userXAxis, useryAxis } from "~/constants";
+import { aggregateTripPopularity } from "~/lib/trip-popularity";
+import type { TripPopularityStats } from "~/lib/trip-popularity";
 
-export const clientLoader = async () => {
-    const [
-        user,
-        dashboardStats,
-        trips,
-        userGrowth,
-        tripsByTravelStyle,
-        allUsers,
-    ] = await Promise.all([
-        getUser(),
-        getUsersAndTripsStats(),
-        getAllTrips(4, 0),
-        getUserGrowthPerDay(),
-        getTripsByTravelStyle(),
-        getAllUsers(0,4),
-    ])
+const LATEST_TRIP_COUNT = 3;
+const STATS_TRIP_CAP = 500;
 
-    const allTrips = (trips?.allTrips || []).map(({ $id, tripDetail, imageUrls }: any) => {
+function shuffleStrings(arr: string[]): string[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function collectHeroImageUrls(documents: any[]): string[] {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const doc of documents) {
+        const urls = doc.imageUrls;
+        if (!Array.isArray(urls)) continue;
+        for (const u of urls) {
+            if (typeof u !== "string" || !u.trim()) continue;
+            if (seen.has(u)) continue;
+            seen.add(u);
+            out.push(u);
+        }
+    }
+    return shuffleStrings(out);
+}
+
+export const loader = async () => {
+    const { documents, total } = await getTripsUpTo(STATS_TRIP_CAP);
+
+    const trips = documents.slice(0, LATEST_TRIP_COUNT).map(({ $id, tripDetail, imageUrls }: any) => {
         const parsed = parseTripData(tripDetail);
         return {
             id: $id,
             ...parsed,
-            imageUrls: imageUrls ?? []
-        }
-    })
+            imageUrls: imageUrls ?? [],
+        };
+    });
 
-    const mappedUsers = (allUsers?.users || []).map((user: any) => ({
-        imageUrl: user.imageUrl,
-        name: user.name,
-        count: user.itineraryCount ?? Math.floor(Math.random() * 10),
-    }))
+    const popularity = aggregateTripPopularity(documents);
+    const heroImages = collectHeroImageUrls(documents);
 
     return {
-        user,
-        dashboardStats,
-        allTrips,
-        userGrowth,
-        tripsByTravelStyle,
-        allUsers: mappedUsers
-    }
-}
+        trips,
+        total,
+        popularity,
+        sampleSize: documents.length,
+        heroImages,
+    };
+};
 
 const Dashboard = ({ loaderData }: Route.ComponentProps) => {
-    const { user, dashboardStats, allTrips, userGrowth, tripsByTravelStyle, allUsers } = loaderData;
+    const { trips, total, popularity, sampleSize, heroImages } = loaderData;
 
-    const tripsForGrid = allTrips.map((trip: any) => ({
-        imageUrl: trip.imageUrls[0] || '/assets/images/placeholder.png',
-        name: trip.name || 'Untitled Trip',
-        interest: typeof trip.interests === 'string' ? trip.interests : trip.interests?.[0] || 'General',
-    }))
+    const [InsightCharts, setInsightCharts] = React.useState<React.ComponentType<{
+        popularity: TripPopularityStats;
+        sampleSize: number;
+    }> | null>(null);
 
-    const usersAndTrips = [
-        {
-            title: 'Latest User Signups',
-            dataSource: allUsers,
-            field: 'count',
-            headerText: 'Trips created'
-        },
-        {
-            title: 'Trips by Interest',
-            dataSource: tripsForGrid,
-            field: 'interest',
-            headerText: 'Interests'
-        }
-    ]
+    const [HeroSlideshow, setHeroSlideshow] = React.useState<React.ComponentType<{
+        images: string[];
+    }> | null>(null);
+
+    React.useEffect(() => {
+        void import("~/components/DashboardInsightCharts").then((m) =>
+            setInsightCharts(() => m.default)
+        );
+        void import("~/components/DashboardHeroSlideshow").then((m) =>
+            setHeroSlideshow(() => m.default)
+        );
+    }, []);
 
     return (
-        <main className="dashboard pt-32 pb-20 bg-[#FAFBFC]">
-            <div className="max-w-7xl mx-auto px-6 lg:px-10">
-                {/* Header Section aligned with TripDetail Typography */}
-                <Header
-                    title={`Welcome back, ${user?.name ?? 'Guest'} 👋`}
-                    description="Monitor your travel ecosystem, track growth, and explore the latest AI-generated itineraries."
-                />
-
-                {/* Stats Cards Section */}
-                <section className="mt-12">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <StatsCard
-                            headerTitle="Total Explorers"
-                            total={dashboardStats.totalUsers}
-                            currentMonthCount={dashboardStats.usersJoined.currentMonth}
-                            lastMonthCount={dashboardStats.usersJoined.lastMonth}
-                        />
-                        <StatsCard
-                            headerTitle="Generated Trips"
-                            total={dashboardStats.totalTrips}
-                            currentMonthCount={dashboardStats.tripsCreated.currentMonth}
-                            lastMonthCount={dashboardStats.tripsCreated.lastMonth}
-                        />
-                        <StatsCard
-                            headerTitle="Active Sessions"
-                            total={dashboardStats.userRole.total}
-                            currentMonthCount={dashboardStats.userRole.currentMonth}
-                            lastMonthCount={dashboardStats.userRole.lastMonth}
-                        />
+        <main className="dashboard pb-20 pt-6 md:pt-10 bg-[#FAFBFC]">
+            <div className="mx-auto max-w-7xl px-6 lg:px-10">
+                <div className="mx-auto max-w-3xl text-center">
+                    <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-5">
+                        <BrandMark size="lg" />
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-5xl">
+                            BXL Travel
+                        </h1>
                     </div>
-                </section>
+                    <p className="mt-4 text-lg leading-relaxed text-slate-600 md:text-xl">
+                        Plan trips with AI-built day-by-day itineraries, see what destinations and
+                        styles are trending, and jump from inspiration to your next adventure in one
+                        place.
+                    </p>
+                </div>
 
-                {/* Created Trips Section - Matching the Gallery/Grid style */}
+                <div className="mt-10">
+                    {HeroSlideshow ? (
+                        <HeroSlideshow images={heroImages} />
+                    ) : (
+                        <div
+                            className="aspect-[16/10] min-h-[240px] max-h-[min(56vh,560px)] w-full animate-pulse rounded-[32px] border border-slate-100 bg-slate-100 shadow-md md:aspect-[2.2/1] md:min-h-[320px]"
+                            aria-hidden
+                        />
+                    )}
+                </div>
+
+                {InsightCharts ? (
+                    <InsightCharts popularity={popularity} sampleSize={sampleSize} />
+                ) : (
+                    <section className="mt-16" aria-hidden="true">
+                        <div className="mb-10">
+                            <h2 className="text-3xl font-bold text-slate-900">Travel insights</h2>
+                            <p className="mt-1 text-slate-500">Loading charts…</p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-10 xl:grid-cols-3">
+                            {[1, 2, 3].map((i) => (
+                                <div
+                                    key={i}
+                                    className="h-[380px] animate-pulse rounded-[32px] border border-slate-100 bg-white shadow-sm"
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                <div className="mt-14 flex justify-center">
+                    <CreateTripLink />
+                </div>
+
                 <section className="mt-20">
-                    <div className="flex justify-between items-end mb-8">
-                        <div>
-                            <h2 className="text-3xl font-bold text-slate-900">Recently Created</h2>
-                            <p className="text-slate-500 mt-1">The latest travel plans generated by users.</p>
+                    <div className="mb-8 text-center">
+                        <div className="mb-2 flex items-center justify-center gap-3">
+                            <BrandMark size="sm" />
+                            <h2 className="text-3xl font-bold text-slate-900">Latest trips</h2>
                         </div>
+                        <p className="mt-1 text-slate-500">
+                            {total === 0
+                                ? "No trips yet — generate your first itinerary."
+                                : trips.length > 0
+                                  ? `The ${trips.length} most recent itinerar${trips.length === 1 ? "" : "ies"}.`
+                                  : `You have ${total} trip${total === 1 ? "" : "s"} in your library.`}
+                        </p>
                     </div>
 
-                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
-                        {allTrips.map((trip: any) => (
-                            <TripCard
-                                key={trip.id}
-                                id={trip.id}
-                                name={trip.name || 'AI Trip'}
-                                imageUrl={trip.imageUrls[0]}
-                                location={trip.itinerary?.[0]?.location || trip.country || 'Global'}
-                                tags={[
-                                    typeof trip.interests === 'string' ? trip.interests : trip.interests?.[0],
-                                    trip.travelStyle
-                                ].filter(Boolean)}
-                                price={trip.estimatedPrice || 'Contact'}
-                            />
-                        ))}
-                    </div>
-                </section>
-
-                {/* Analytics Section - Refined Chart Containers */}
-                <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-20">
-                    <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-                        <h3 className="text-xl font-bold text-slate-900 mb-6 px-2">Growth Analytics</h3>
-                        <ChartComponent
-                            id="chart-1"
-                            primaryXAxis={userXAxis}
-                            primaryYAxis={useryAxis}
-                            chartArea={{ border: { width: 0 } }}
-                            tooltip={{ enable: true }}
-                            background="transparent"
+                    <div className="mb-10 flex justify-center">
+                        <Link
+                            to="/trips"
+                            className="flex h-12 w-full max-w-sm items-center justify-center rounded-2xl border-2 border-slate-200 bg-white px-8 text-sm font-bold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
                         >
-                            <Inject services={[ColumnSeries, SplineAreaSeries, Category, DataLabel, Tooltip]} />
-                            <SeriesCollectionDirective>
-                                <SeriesDirective
-                                    dataSource={userGrowth}
-                                    xName="day"
-                                    yName="count"
-                                    type="Column"
-                                    columnWidth={0.3}
-                                    fill="#3B82F6"
-                                    cornerRadius={{ topLeft: 6, topRight: 6 }}
-                                />
-                                <SeriesDirective
-                                    dataSource={userGrowth}
-                                    xName="day"
-                                    yName="count"
-                                    type="SplineArea"
-                                    fill="rgba(59, 130, 246, 0.1)"
-                                    border={{ width: 2, color: '#3B82F6' }}
-                                />
-                            </SeriesCollectionDirective>
-                        </ChartComponent>
+                            View all created trips
+                        </Link>
                     </div>
 
-                    <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-                        <h3 className="text-xl font-bold text-slate-900 mb-6 px-2">Travel Style Trends</h3>
-                        <ChartComponent
-                            id="chart-2"
-                            primaryXAxis={tripXAxis}
-                            primaryYAxis={tripyAxis}
-                            chartArea={{ border: { width: 0 } }}
-                            tooltip={{ enable: true }}
-                            background="transparent"
-                        >
-                            <Inject services={[ColumnSeries, Category, DataLabel, Tooltip]} />
-                            <SeriesCollectionDirective>
-                                <SeriesDirective
-                                    dataSource={tripsByTravelStyle}
-                                    xName="travelStyle"
-                                    yName="count"
-                                    type="Column"
-                                    fill="#8B5CF6"
-                                    columnWidth={0.4}
-                                    cornerRadius={{ topLeft: 6, topRight: 6 }}
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        {trips.length > 0 ? (
+                            trips.map((trip: any) => (
+                                <TripCard
+                                    key={trip.id}
+                                    id={trip.id}
+                                    name={trip.name || "AI Trip"}
+                                    imageUrl={trip.imageUrls[0]}
+                                    location={
+                                        trip.itinerary?.[0]?.location || trip.country || "Global"
+                                    }
+                                    tags={[
+                                        typeof trip.interests === "string"
+                                            ? trip.interests
+                                            : trip.interests?.[0],
+                                        trip.travelStyle,
+                                    ].filter(Boolean)}
+                                    price={trip.estimatedPrice || "Contact"}
                                 />
-                            </SeriesCollectionDirective>
-                        </ChartComponent>
+                            ))
+                        ) : (
+                            <div className="col-span-full rounded-[32px] border border-dashed border-slate-200 bg-white py-20 text-center">
+                                <p className="font-medium text-slate-500">
+                                    No trips found. Start by creating one.
+                                </p>
+                            </div>
+                        )}
                     </div>
-                </section>
-
-                {/* Table/Grid Section - Softened Grid Style */}
-                <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
-                    {usersAndTrips.map(({ title, dataSource, field, headerText }, i) => (
-                        <div key={i} className="flex flex-col gap-6 bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-                            <h3 className="text-xl font-bold text-slate-900">{title}</h3>
-                            <GridComponent
-                                dataSource={dataSource}
-                                gridLines="None"
-                                rowHeight={60}
-                            >
-                                <ColumnsDirective>
-                                    <ColumnDirective
-                                        field="name"
-                                        headerText="Name"
-                                        width="200"
-                                        textAlign="Left"
-                                        template={(props: any) => (
-                                            <div className="flex items-center gap-3">
-                                                <img src={props.imageUrl} alt="img" className="rounded-full size-10 object-cover shadow-sm" />
-                                                <span className="text-slate-900 font-semibold">{props.name}</span>
-                                            </div>
-                                        )}
-                                    />
-                                    <ColumnDirective
-                                        field={field}
-                                        headerText={headerText}
-                                        width="150"
-                                        textAlign="Left"
-                                        template={(props: any) => (
-                                            <span className="text-slate-500 font-medium">{props[field]}</span>
-                                        )}
-                                    />
-                                </ColumnsDirective>
-                            </GridComponent>
-                        </div>
-                    ))}
                 </section>
             </div>
         </main>
-    )
-}
+    );
+};
 
 export default Dashboard;

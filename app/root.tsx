@@ -21,6 +21,29 @@ export const links: Route.LinksFunction = () => [
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap",
     },
+    {
+        rel: "icon",
+        href: "/assets/icons/logo.svg",
+        type: "image/svg+xml",
+    },
+    {
+        rel: "shortcut icon",
+        href: "/assets/icons/logo.svg",
+        type: "image/svg+xml",
+    },
+    {
+        rel: "apple-touch-icon",
+        href: "/assets/icons/logo.svg",
+    },
+];
+
+export const meta: Route.MetaFunction = () => [
+    { title: "BXL Travel" },
+    {
+        name: "description",
+        content:
+            "Plan trips with AI-generated day-by-day itineraries, tailored to your style and budget.",
+    },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

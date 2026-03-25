@@ -83,36 +83,6 @@ declare interface TripCardProps {
   price: string;
 }
 
-declare interface StatsCard {
-  headerTitle: string;
-  total: number;
-  lastMonthCount: number;
-  currentMonthCount: number;
-}
-
-declare interface TrendResult {
-  trend: "increment" | "decrement" | "no change";
-  percentage: number;
-}
-
-declare interface DashboardStats {
-  totalUsers: number;
-  usersJoined: {
-    currentMonth: number;
-    lastMonth: number;
-  };
-  userRole: {
-    total: number;
-    currentMonth: number;
-    lastMonth: number;
-  };
-  totalTrips: number;
-  tripsCreated: {
-    currentMonth: number;
-    lastMonth: number;
-  };
-}
-
 declare interface CreateTripResponse {
   id?: string;
 }

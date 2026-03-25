@@ -1,4 +1,4 @@
-import { Header } from "../../components";
+import { BrandMark, PageShell } from "../../components";
 // Use DropDownListComponent for preference fields (opens on click)
 // Use ComboBoxComponent for Destination (best for long lists with filtering)
 import { ComboBoxComponent, DropDownListComponent } from "@syncfusion/ej2-react-dropdowns";
@@ -9,7 +9,6 @@ import { LayerDirective, LayersDirective, MapsComponent } from "@syncfusion/ej2-
 import React, { useState, useRef } from "react";
 import { world_map } from "~/constants/world_map";
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
-import { account } from "~/appwrite/client";
 import { useNavigate } from "react-router";
 
 // --- Ensure your app/app.css has these imports ---
@@ -86,7 +85,6 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
         }
 
         try {
-            const user = await account.get();
             const response = await fetch('/api/create-trip', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -94,7 +92,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                     ...formData,
                     interests: formData.interest,
                     numberOfDays: formData.duration,
-                    userId: user.$id
+                    userId: 'anonymous',
                 })
             });
 
@@ -118,14 +116,22 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
     }];
 
     return (
-        <div className="min-h-screen bg-slate-50 pt-32 pb-20">
-            <main className="max-w-5xl mx-auto px-6">
-                <Header
-                    title="Plan Your Next Adventure"
-                    description="Our AI will craft a personalized itinerary based on your preferences."
-                />
+        <PageShell bgClassName="bg-slate-50">
+            <div className="mx-auto mb-10 max-w-3xl text-center">
+                <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-5">
+                    <BrandMark size="md" />
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
+                        Plan your next adventure
+                    </h1>
+                </div>
+                <p className="mt-4 text-lg leading-relaxed text-slate-600 md:text-xl">
+                    Tell us where you want to go and how you like to travel—our AI builds a day-by-day
+                    itinerary you can refine and share.
+                </p>
+            </div>
 
-                <div className="mt-10 bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+            <div className="mx-auto max-w-5xl">
+                <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
                     <form className="p-8 md:p-12 space-y-10" onSubmit={handleSubmit}>
 
                         {/* Section 1: Destination & Time */}
@@ -219,8 +225,8 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                         </div>
                     </form>
                 </div>
-            </main>
-        </div>
+            </div>
+        </PageShell>
     );
 }
 

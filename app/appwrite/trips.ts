@@ -19,6 +19,36 @@ export const getAllTrips = async (limit: number, offset: number) => {
     }
 }
 
+/** Fetches up to `maxDocuments` newest trips (paginated) for analytics. */
+export const getTripsUpTo = async (maxDocuments: number) => {
+    const documents: any[] = [];
+    let total = 0;
+    const batch = 100;
+
+    while (documents.length < maxDocuments) {
+        const take = Math.min(batch, maxDocuments - documents.length);
+        const res = await database.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.tripCollectionId,
+            [
+                Query.limit(take),
+                Query.offset(documents.length),
+                Query.orderDesc("createdAt"),
+            ]
+        );
+        total = res.total;
+        if (!res.documents.length) {
+            break;
+        }
+        documents.push(...res.documents);
+        if (res.documents.length < take) {
+            break;
+        }
+    }
+
+    return { documents, total };
+};
+
 export const getTripById = async (tripId: string) => {
     const trip = await database.getDocument(
         appwriteConfig.databaseId,

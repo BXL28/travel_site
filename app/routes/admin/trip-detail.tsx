@@ -2,7 +2,7 @@ import { Link, type LoaderFunctionArgs } from "react-router";
 import { getAllTrips, getTripById } from "~/appwrite/trips";
 import type { Route } from './+types/trip-detail';
 import { cn, parseTripData } from "~/lib/utils";
-import { Header, InfoPill, TripCard } from "../../components";
+import { BrandMark, InfoPill, PageHeading, PageShell, TripCard } from "../../components";
 import { ChipDirective, ChipListComponent, ChipsDirective } from "@syncfusion/ej2-react-buttons";
 
 // --- Interfaces ---
@@ -94,17 +94,28 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
     };
 
     return (
-        <main className="trip-detail pt-40 wrapper">
-            <div className="max-w-5xl mx-auto">
-                <Link to="/dashboard" className="flex items-center gap-2 mb-8 text-gray-500 hover:text-black transition-all">
-                    <img src="/assets/icons/arrow-left.svg" alt="back" className="w-5 h-5" />
-                    <span className="font-medium">Back to Dashboard</span>
-                </Link>
+        <PageShell className="trip-detail">
+            <div className="mx-auto max-w-5xl">
+                <div className="mb-8 flex justify-center">
+                    <Link
+                        to="/"
+                        className="flex items-center gap-2 text-slate-500 transition-colors hover:text-slate-900"
+                    >
+                        <img src="/assets/icons/arrow-left.svg" alt="" className="h-5 w-5" />
+                        <span className="font-medium">Back to home</span>
+                    </Link>
+                </div>
 
-                <section className="container">
-                    <header className="mb-10">
-                        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">{name}</h1>
-                        <div className="flex flex-wrap items-center gap-4 mt-6">
+                <section>
+                    <header className="mb-10 text-center">
+                        <div className="mb-6 flex items-center justify-center gap-3">
+                            <BrandMark size="sm" />
+                            <span className="text-lg font-bold tracking-tight text-slate-900">
+                                BXL Travel
+                            </span>
+                        </div>
+                        <h1 className="text-4xl font-bold leading-tight text-slate-900 md:text-5xl">{name}</h1>
+                        <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                             <InfoPill text={`${duration} Days in ${country}`} image="/assets/icons/calendar.svg" />
                             {location?.city && (
                                 <InfoPill text={location.city} image="/assets/icons/location-mark.svg" />
@@ -158,43 +169,36 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
                             </section>
                         </div>
 
-                        {/* Sidebar Info */}
                         <aside className="space-y-8">
-                            <div className="bg-white border border-gray-100 p-6 rounded-3xl shadow-sm">
-                                <p className="text-gray-400 text-sm font-medium uppercase tracking-wider">Starting from</p>
-                                <h2 className="text-4xl font-bold text-blue-600 mb-6">{estimatedPrice}</h2>
+                            <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+                                <p className="text-sm font-medium uppercase tracking-wider text-slate-400">
+                                    Starting from
+                                </p>
+                                <h2 className="mb-6 text-4xl font-bold text-blue-600">{estimatedPrice}</h2>
 
-                                <ChipListComponent id="trip-tags">
-                                    <ChipsDirective>
-                                        {pillItems.map((pill, i) => (
-                                            <ChipDirective key={i} text={pill.text} cssClass={`${pill.bg} !rounded-lg`} />
-                                        ))}
-                                    </ChipsDirective>
-                                </ChipListComponent>
-
-
-                            </div>
-
-                            <div className="bg-white border border-gray-100 p-6 rounded-3xl shadow-sm">
-                                <p className="text-gray-400 text-sm font-medium uppercase tracking-wider">Starting from</p>
-                                <h2 className="text-4xl font-bold text-blue-600 mb-6">{estimatedPrice}</h2>
-
-                                {/* 🟢 NEW BOOKING BUTTON */}
                                 <a
                                     href={getBookingLink(location?.city || "", country)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all mb-6 shadow-lg shadow-blue-100"
+                                    className="mb-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-4 font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700"
                                 >
-                                    Book Tickets & Tours
+                                    Book tickets & tours
                                 </a>
 
                                 <ChipListComponent id="trip-tags">
-                                    {/* ... your existing chips code ... */}
+                                    <ChipsDirective>
+                                        {pillItems.map((pill, i) => (
+                                            <ChipDirective
+                                                key={i}
+                                                text={pill.text}
+                                                cssClass={`${pill.bg} !rounded-lg`}
+                                            />
+                                        ))}
+                                    </ChipsDirective>
                                 </ChipListComponent>
                             </div>
 
-                            <div className="bg-slate-900 text-white p-6 rounded-3xl">
+                            <div className="rounded-3xl bg-slate-900 p-6 text-white">
                                 <h3 className="text-lg font-bold mb-4">Travel Tips</h3>
                                 <div className="space-y-6">
                                     <div>
@@ -215,9 +219,13 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
                     </div>
                 </section>
 
-                {/* Popular Trips Section */}
-                <section className="mt-24 border-t pt-16">
-                    <Header title="Explore More" description="Similar trips you might enjoy" />
+                <section className="mt-20 border-t border-slate-100 pt-16">
+                    <PageHeading
+                        as="h2"
+                        size="section"
+                        title="Explore more"
+                        description="Similar trips you might enjoy."
+                    />
                     <div className="trip-grid">
                         {relatedTrips.map((trip) => (
                             <TripCard
@@ -233,7 +241,7 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
                     </div>
                 </section>
             </div>
-        </main>
+        </PageShell>
     );
 };
 

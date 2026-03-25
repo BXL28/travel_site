@@ -6,6 +6,9 @@ import { sentryReactRouter } from "@sentry/react-router";
 
 export default defineConfig((config) => {
     return {
+        resolve: {
+            dedupe: ["react", "react-dom"],
+        },
         plugins: [
             sentryReactRouter({
                 org: "js-mastery-90g",
@@ -18,6 +21,10 @@ export default defineConfig((config) => {
         ],
         optimizeDeps: {
             include: [
+                "react",
+                "react-dom",
+                "react-router",
+                "@sentry/react-router",
                 '@syncfusion/ej2-base',
                 '@syncfusion/ej2-react-buttons',
                 '@syncfusion/ej2-react-grids',
