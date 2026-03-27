@@ -79,7 +79,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
         setLoading(true);
 
         if (!formData.country || !formData.travelStyle || !formData.interest || !formData.budget || !formData.groupType || formData.duration === 0) {
-            setError('Please complete all fields to generate your itinerary.');
+            setError('Fill in every field first—I need the full set before I send it to Gemini.');
             setLoading(false);
             return;
         }
@@ -100,7 +100,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
             if (result?.id) {
                 navigate(`/trips/${result.id}`);
             } else {
-                setError(result?.error || 'Failed to generate a trip');
+                setError(result?.error || 'Could not generate this run—worth trying again.');
             }
         } catch (e) {
             setError('Connection error. Please try again.');
@@ -121,12 +121,12 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                 <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-5">
                     <BrandMark size="md" />
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
-                        Plan your next adventure
+                        New itinerary
                     </h1>
                 </div>
                 <p className="mt-4 text-lg leading-relaxed text-slate-600 md:text-xl">
-                    Tell us where you want to go and how you like to travel—our AI builds a day-by-day
-                    itinerary you can refine and share.
+                    I pick destination, trip length, budget, style, and who’s going. Gemini uses that to draft a
+                    day-by-day plan I can open, tweak, and save like any other run.
                 </p>
             </div>
 
@@ -219,7 +219,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                                     ) : (
                                         <img src="/assets/icons/magic-star.svg" className="size-5 invert" alt="magic" />
                                     )}
-                                    <span>{loading ? 'Curating Your Experience...' : 'Create My Itinerary'}</span>
+                                    <span>{loading ? 'Waiting on Gemini…' : 'Generate itinerary'}</span>
                                 </div>
                             </ButtonComponent>
                         </div>

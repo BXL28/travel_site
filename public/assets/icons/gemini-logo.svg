@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="geminiTitle">
+  <title id="geminiTitle">Google Gemini</title>
+  <defs>
+    <linearGradient id="geminiGrad" x1="14%" y1="88%" x2="86%" y2="12%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4688f4"/>
+      <stop offset="45%" stop-color="#7b5cff"/>
+      <stop offset="100%" stop-color="#e971af"/>
+    </linearGradient>
+  </defs>
+  <!-- Simplified Gemini mark: four-lobed star -->
+  <path
+    fill="url(#geminiGrad)"
+    d="M48 4c2.5 0 5 2 6.5 5.5L62 28l18.5 8c3.5 1.5 5.5 4 5.5 6.5s-2 5-5.5 6.5L62 57l-7.5 18.5c-1.5 3.5-4 5.5-6.5 5.5s-5-2-6.5-5.5L34 57 15.5 49C12 47.5 10 45 10 42.5s2-5 5.5-6.5L34 28l7.5-18.5C43 6 45.5 4 48 4Z"
+  />
+</svg>

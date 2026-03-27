@@ -45,7 +45,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
             throw new Response("Trip Not Found", { status: 404 });
         }
 
-        // Fetch other trips for the "Explore More" section
+        // Other saved trips for the bottom carousel
         const { allTrips } = await getAllTrips(4, 0);
 
         return {
@@ -172,7 +172,7 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
                         <aside className="space-y-8">
                             <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
                                 <p className="text-sm font-medium uppercase tracking-wider text-slate-400">
-                                    Starting from
+                                    Rough estimate
                                 </p>
                                 <h2 className="mb-6 text-4xl font-bold text-blue-600">{estimatedPrice}</h2>
 
@@ -223,8 +223,8 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
                     <PageHeading
                         as="h2"
                         size="section"
-                        title="Explore more"
-                        description="Similar trips you might enjoy."
+                        title="Other trips I’ve saved"
+                        description="More drafts in my library—open one if I want to compare or revisit an older idea."
                     />
                     <div className="trip-grid">
                         {relatedTrips.map((trip) => (

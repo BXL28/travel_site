@@ -1,12 +1,18 @@
-import {Link, useLocation} from "react-router";
+import { Link } from "react-router";
 import {ChipDirective, ChipListComponent, ChipsDirective} from "@syncfusion/ej2-react-buttons";
 import {cn, getFirstWord} from "~/lib/utils";
 
 const TripCard = ({ id, name, location, imageUrl, tags, price }: TripCardProps) => {
-    const path = useLocation();
-
     return (
-        <Link to={`/trips/${id}`} className="trip-card">
+        <Link
+            to={`/trips/${id}`}
+            className={cn(
+                "trip-card flex flex-col overflow-hidden",
+                "transition duration-200 ease-out",
+                "hover:-translate-y-1 hover:shadow-xl hover:ring-2 hover:ring-primary-500/15",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+            )}
+        >
             <img src={imageUrl} alt={name} />
 
             <article>
@@ -21,7 +27,7 @@ const TripCard = ({ id, name, location, imageUrl, tags, price }: TripCardProps) 
             </article>
 
             <div className="mt-5 pl-[18px] pr-3.5 pb-5">
-                <ChipListComponent id="travel-chip">
+                <ChipListComponent id={`travel-chip-${id}`}>
                     <ChipsDirective>
                         {tags?.map((tag, index) => (
                             <ChipDirective

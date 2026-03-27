@@ -42,7 +42,7 @@ export const meta: Route.MetaFunction = () => [
     {
         name: "description",
         content:
-            "Plan trips with AI-generated day-by-day itineraries, tailored to your style and budget.",
+            "Personal travel planner: I use Gemini to draft day-by-day itineraries from my own trip form, then keep and compare runs.",
     },
 ];
 

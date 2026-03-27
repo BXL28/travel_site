@@ -58,7 +58,7 @@ const Trips = ({ loaderData }: Route.ComponentProps) => {
         <PageShell>
             <PageHeading
                 title="All trips"
-                description="Browse every AI-generated itinerary in your library. Open a card for the full day-by-day plan."
+                description="Trips I’ve already generated. Open a card for the full day-by-day breakdown."
             />
 
             <div className="mb-12 flex justify-center">
@@ -91,7 +91,7 @@ const Trips = ({ loaderData }: Route.ComponentProps) => {
                     ) : (
                         <div className="col-span-full rounded-[32px] border border-dashed border-slate-200 bg-white py-20 text-center">
                             <p className="font-medium text-slate-500">
-                                No trips found. Start by creating one.
+                                Nothing here yet—I can generate one from the new itinerary form.
                             </p>
                         </div>
                     )}
