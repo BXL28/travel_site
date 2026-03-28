@@ -30,7 +30,7 @@ A centralized hub to explore all trips generated.
 <br/>
 
 ### Day by Day Itinerary
-Every generated trip includes direct integration with **Viator.com**, allowing users to purchase tours instantly.
+Every generated trip includes direct integration with **Viator.com**, allowing for easier planing.
 <img width="1861" height="790" alt="image" src="https://github.com/user-attachments/assets/2a1f31fc-48df-425e-8ad0-67deaedb8b80" />
 
 
