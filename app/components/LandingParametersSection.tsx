@@ -8,15 +8,15 @@ export default function LandingParametersSection() {
             imageFirst
             ariaLabel="Create trip parameters"
             kicker="Create trip"
-            title="Parameters I give Gemini before it drafts a plan"
+            title="Parameters you give for generating a plan"
             imageSrc="/assets/landing/create-trip-parameters.png"
             imageAlt="Create trip form: destination Egypt, 10 days, friends, adventure style, historical sites interest, premium budget"
             imagePresentation="screenshot"
             imageZoomOnHover
         >
             <p>
-                On <strong>Create trip</strong> I select everything the generator needs in one pass. That payload is
-                what gets sent to Gemini so the model knows the destination, length, and vibe I’m asking for:
+                On <strong>Create trip</strong> select everything the generator needs in one pass. That payload is
+                what determines the destination, length, and vibe you are asking for:
             </p>
             <ul className="list-inside list-disc space-y-2 marker:text-primary-500">
                 <li>
@@ -39,12 +39,7 @@ export default function LandingParametersSection() {
                     <strong>Group type</strong> — solo, couple, family, friends, or business.
                 </li>
             </ul>
-            <p className="text-sm text-slate-500">
-                <Link to="/travel/create" className="font-semibold text-primary-600 underline-offset-2 hover:underline">
-                    Create trip
-                </Link>{" "}
-                — same form I use.
-            </p>
+            
         </LandingSplitBlock>
     );
 }

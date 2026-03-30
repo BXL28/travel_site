@@ -21,24 +21,16 @@ export default function LandingSavedTripsSection({ showcaseTrips }: Props) {
                 ) : (
                     <p className="max-w-sm px-4 text-center text-sm leading-relaxed text-slate-500">
                         No saved trips yet—once I generate some, you can flip through them here.{" "}
-                        <Link to="/travel/create" className="font-semibold text-primary-600 underline-offset-2 hover:underline">
-                            Create a trip
-                        </Link>
-                        .
+                        
                     </p>
                 )
             }
         >
             <p>
                 A finished plan will have a day-by-day itinerary, travel tips, and an estimate of budget and costs.
-                I can also access any other plan I made previously if I want to compare.
+                Access any other plan previously made to compare or follow.
             </p>
-            <p className="text-sm text-slate-500">
-                <Link to="/trips" className="font-semibold text-primary-600 underline-offset-2 hover:underline">
-                    My trips list
-                </Link>
-                .
-            </p>
+            
         </LandingSplitBlock>
     );
 }
