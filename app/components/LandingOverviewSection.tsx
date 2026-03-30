@@ -5,16 +5,21 @@ export default function LandingOverviewSection() {
         <LandingSplitBlock
             ariaLabel="Overview"
             kicker="Overview"
-            title="Planning trips is hard and time consuming"
+            title="Planing vacations is hard so get Gemini to do it for you"
             titleLevel="h1"
             titleClassName="gemini-gen-heading"
-            imageSrc="/assets/icons/gemini-logo.svg"
-            imageAlt="Google Gemini logo"
+            mediaSlot={
+                <video
+                    src="/assets/landing/bxltravel-showcase.mp4"
+                    muted
+                    playsInline
+                    autoPlay
+                    loop
+                    className="h-full w-full rounded-xl object-cover"
+                />
+            }
         >
-            <p>
-                So I got <strong className="gemini-gen-accent">Gemini</strong> to help me by giving me a plan to
-                follow with advice and suggestions.
-            </p>
+            <p>Generates day-by-day guides for your next vacation and have tips to help you on your vacations</p>
         </LandingSplitBlock>
     );
 }

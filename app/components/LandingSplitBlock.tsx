@@ -65,18 +65,18 @@ export function LandingSplitBlock(props: LandingSplitBlockProps) {
     const hasMediaSlot = "mediaSlot" in props && props.mediaSlot != null;
 
     const textCol = (
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center md:basis-1/2 md:max-w-[50%]">
-            <p className="text-sm font-bold uppercase tracking-widest text-primary-500">{kicker}</p>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center md:basis-1/2 md:max-w-[50%]">
+            <p className="text-sm font-bold uppercase tracking-widest text-black">{kicker}</p>
             <TitleTag
                 className={cn(
                     "mt-3 text-2xl font-bold leading-tight tracking-tight sm:text-3xl lg:text-4xl",
-                    !titleClassName && "text-slate-900",
+                    !titleClassName && "text-black",
                     titleClassName
                 )}
             >
                 {title}
             </TitleTag>
-            <div className="mt-5 space-y-4 text-base leading-relaxed text-slate-600 md:text-lg [&_strong]:font-semibold [&_strong]:text-slate-800">
+            <div className="mt-5 space-y-4 text-base leading-relaxed text-black md:text-lg [&_a]:text-black [&_a]:underline [&_a]:underline-offset-2 [&_strong]:font-semibold [&_strong]:text-black">
                 {children}
             </div>
         </div>
